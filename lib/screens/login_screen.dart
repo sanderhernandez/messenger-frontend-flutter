@@ -1,5 +1,8 @@
+import 'package:chat/helpers/mostrar_alerta.dart';
+import 'package:chat/services/services.dart';
 import 'package:chat/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -45,11 +48,15 @@ class _Form extends StatefulWidget {
 }
 
 class _FormState extends State<_Form> {
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController emailController =
+      TextEditingController(text: 'test1@test.com');
+  final TextEditingController passwordController =
+      TextEditingController(text: '123');
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Container(
       margin: EdgeInsets.only(top: 40),
       padding: EdgeInsets.symmetric(horizontal: 50),
@@ -71,10 +78,30 @@ class _FormState extends State<_Form> {
           BotonAncho(
             text: 'Iniciar sesion',
             color: Colors.blue,
-            onPressed: () {
-              print(emailController.text);
-              print(passwordController.text);
-            },
+            onPressed: authService.autenticando
+                ? null
+                : () async {
+                    // print(emailController.text);
+                    // print(passwordController.text);
+
+                    FocusScope.of(context).unfocus();
+
+                    final loginOK = await authService.login(
+                        emailController.text.trim(),
+                        passwordController.text.trim());
+
+                    if (loginOK == true) {
+                      // print(await AuthService.getToken());
+
+                      //TODO: Contectar a nuestro socket server.
+
+                      Navigator.pushReplacementNamed(context, 'usuarios');
+                    } else {
+                      //mostrarAlerta(context, 'Error', 'Revise sus credenciales nuevamente');
+
+                      mostrarAlerta(context, loginOK['titulo'], loginOK['msg']);
+                    }
+                  },
           ),
         ],
       ),

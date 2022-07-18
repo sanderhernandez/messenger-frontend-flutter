@@ -1,5 +1,8 @@
+import 'package:chat/helpers/mostrar_alerta.dart';
+import 'package:chat/services/services.dart';
 import 'package:chat/widgets/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({Key? key}) : super(key: key);
@@ -44,14 +47,19 @@ class _Form extends StatefulWidget {
 }
 
 class _FormState extends State<_Form> {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController nameController =
+      TextEditingController(text: 'Alexander');
+  final TextEditingController emailController =
+      TextEditingController(text: 'test6@test.com');
+  final TextEditingController passwordController =
+      TextEditingController(text: '123');
   final TextEditingController verifyPasswordController =
-      TextEditingController();
+      TextEditingController(text: '123');
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Container(
       margin: EdgeInsets.only(top: 20),
       padding: EdgeInsets.symmetric(horizontal: 50),
@@ -77,7 +85,7 @@ class _FormState extends State<_Form> {
             isPassword: true,
           ),
           CustomInput(
-            labelText: 'Verificar contraseña',
+            labelText: 'Verificación de la contraseña',
             icon: Icons.lock_outlined,
             textController: verifyPasswordController,
             textInputType: TextInputType.emailAddress,
@@ -86,15 +94,40 @@ class _FormState extends State<_Form> {
           BotonAncho(
             text: 'Crear cuenta',
             color: Colors.blue,
-            onPressed: () {
-              print(emailController.text);
+            onPressed: authService.autenticando
+                ? null
+                : () async {
+                    // print(emailController.text);
+                    // print(passwordController.text);
 
-              print(passwordController.text);
+                    if (passwordController.text ==
+                        verifyPasswordController.text) {
+                      //mostrarAlerta(context, 'Registro', 'Registro exitoso!');
+                      //print('Password verificado!');
+                    } else {
+                      mostrarAlerta(context, 'Error',
+                          'La contraseña y la verificación de la contraseña deben ser iguales!');
 
-              if (passwordController.text == verifyPasswordController.text) {
-                print('Password verificado!');
-              }
-            },
+                      return;
+                    }
+
+                    final loginOK = await authService.register(
+                        nameController.text.trim(),
+                        emailController.text.trim(),
+                        passwordController.text.trim());
+
+                    if (loginOK == true) {
+                      //print(await AuthService.getToken());
+                      FocusScope.of(context).unfocus();
+                      //TODO: Contectar a nuestro socket server.
+
+                      //mostrarAlerta(context, 'Registro', 'Registro exitoso!');
+
+                      Navigator.pushReplacementNamed(context, 'usuarios');
+                    } else {
+                      mostrarAlerta(context, 'Error', loginOK);
+                    }
+                  },
           ),
         ],
       ),

@@ -1,5 +1,7 @@
 import 'package:chat/models/models.dart';
+import 'package:chat/services/services.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class UsuariosScreen extends StatelessWidget {
@@ -25,10 +27,14 @@ class UsuariosScreen extends StatelessWidget {
           uid: 'uid'),
     ];
 
+    final authService = Provider.of<AuthService>(context);
+
+    final usuario = authService.usuario;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Nombre',
+          usuario?.nombre ?? '',
           style: TextStyle(color: Colors.black87),
         ),
         backgroundColor: Colors.white,
@@ -37,7 +43,12 @@ class UsuariosScreen extends StatelessWidget {
             Icons.exit_to_app_outlined,
             color: Colors.black87,
           ),
-          onPressed: () {},
+          onPressed: () {
+            // TODO: Desconectar el socket server.
+
+            AuthService.deleteToken();
+            Navigator.pushReplacementNamed(context, 'login');
+          },
         ),
         actions: [
           IconButton(
