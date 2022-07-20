@@ -59,6 +59,7 @@ class _FormState extends State<_Form> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final socketService = Provider.of<SocketService>(context);
 
     return Container(
       margin: EdgeInsets.only(top: 20),
@@ -119,7 +120,9 @@ class _FormState extends State<_Form> {
                     if (loginOK == true) {
                       //print(await AuthService.getToken());
                       FocusScope.of(context).unfocus();
-                      //TODO: Contectar a nuestro socket server.
+
+                      // Contectar a socket server.
+                      socketService.connect();
 
                       //mostrarAlerta(context, 'Registro', 'Registro exitoso!');
 

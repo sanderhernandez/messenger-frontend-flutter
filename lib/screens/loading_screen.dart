@@ -36,12 +36,15 @@ class LoadingScreen extends StatelessWidget {
   Future checkLoginState(BuildContext context) async {
     final authService = Provider.of<AuthService>(context, listen: false);
     final autenticado = await authService.isLoggedIn();
+    final socketService = Provider.of<SocketService>(context, listen: false);
 
     // await Future.delayed(Duration(seconds: 10));
 
     if (autenticado == true) {
       /// isLoggedIn = true (está logeado):
-      // TODO: conectar al socket server.
+
+      /// Conectar al socket server.
+      socketService.connect();
 
       Navigator.pushReplacement(
           context,

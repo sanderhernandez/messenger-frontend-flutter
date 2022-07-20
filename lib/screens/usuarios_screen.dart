@@ -4,37 +4,52 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
-class UsuariosScreen extends StatelessWidget {
-  RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
-
+class UsuariosScreen extends StatefulWidget {
   UsuariosScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    List<Usuario> usuarios = [
-      Usuario(
-          online: true, nombre: 'Felix', email: 'test1@test.com', uid: 'uid'),
-      Usuario(
-          online: false,
-          nombre: 'Melissa',
-          email: 'test2@test.com',
-          uid: 'uid'),
-      Usuario(
-          online: true,
-          nombre: 'Alexander Hernandez',
-          email: 'test3@test.com',
-          uid: 'uid'),
-    ];
+  _UsuariosScreenState createState() => _UsuariosScreenState();
+}
 
+class _UsuariosScreenState extends State<UsuariosScreen> {
+  RefreshController _refreshController =
+      RefreshController(initialRefresh: false);
+
+  final usuariosService = new UsuariosService();
+
+  List<Usuario> usuarios = [];
+
+  // List<Usuario> usuarios = [
+  //   Usuario(online: true, nombre: 'Felix', email: 'test1@test.com', uid: 'uid'),
+  //   Usuario(
+  //       online: false, nombre: 'Melissa', email: 'test2@test.com', uid: 'uid'),
+  //   Usuario(
+  //       online: true,
+  //       nombre: 'Alexander Hernandez',
+  //       email: 'test3@test.com',
+  //       uid: 'uid'),
+  // ];
+
+  @override
+  void initState() {
+    // TODO: implement initState
+
+    _cargarUsuarios();
+
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final socketService = Provider.of<SocketService>(context);
 
     final usuario = authService.usuario;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          usuario?.nombre ?? '',
+          usuario.nombre,
           style: TextStyle(color: Colors.black87),
         ),
         backgroundColor: Colors.white,
@@ -44,17 +59,19 @@ class UsuariosScreen extends StatelessWidget {
             color: Colors.black87,
           ),
           onPressed: () {
-            // TODO: Desconectar el socket server.
+            //Desconectar el socket server:
+            socketService.disconnect();
 
             AuthService.deleteToken();
             Navigator.pushReplacementNamed(context, 'login');
           },
         ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.check_circle),
-            color: Colors.blue[400],
-            onPressed: () {},
+        actions: <Widget>[
+          Container(
+            margin: EdgeInsets.only(right: 10),
+            child: (socketService.serverStatus == ServerStatus.Online)
+                ? Icon(Icons.check_circle, color: Colors.blue[400])
+                : Icon(Icons.offline_bolt, color: Colors.red),
           )
         ],
       ),
@@ -78,8 +95,13 @@ class UsuariosScreen extends StatelessWidget {
   }
 
   void _cargarUsuarios() async {
+    usuarios = await usuariosService.getUsuarios();
+
+    setState(() {});
+
     // monitor network fetch
-    await Future.delayed(Duration(milliseconds: 3000));
+    //await Future.delayed(Duration(milliseconds: 3000));
+
     // if failed,use refreshFailed()
     _refreshController.refreshCompleted();
   }
@@ -106,6 +128,13 @@ class ItemUsuario extends StatelessWidget {
           borderRadius: BorderRadius.circular(100),
         ),
       ),
+      onTap: () {
+        final chatService = Provider.of<ChatService>(context, listen: false);
+        chatService.usuarioPara = usuario;
+        // print(usuario.nombre);
+
+        Navigator.pushNamed(context, 'chat');
+      },
     );
   }
 }

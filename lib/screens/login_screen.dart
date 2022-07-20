@@ -56,6 +56,7 @@ class _FormState extends State<_Form> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final socketService = Provider.of<SocketService>(context);
 
     return Container(
       margin: EdgeInsets.only(top: 40),
@@ -91,9 +92,9 @@ class _FormState extends State<_Form> {
                         passwordController.text.trim());
 
                     if (loginOK == true) {
-                      // print(await AuthService.getToken());
+                      //print(await AuthService.getToken());
 
-                      //TODO: Contectar a nuestro socket server.
+                      socketService.connect(); // Contectar a socket server.
 
                       Navigator.pushReplacementNamed(context, 'usuarios');
                     } else {

@@ -1,4 +1,6 @@
+import 'package:chat/services/services.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ChatMessage extends StatelessWidget {
   final String texto;
@@ -14,13 +16,16 @@ class ChatMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context, listen: false);
+
     return FadeTransition(
       opacity: animationController,
       child: SizeTransition(
         sizeFactor:
             CurvedAnimation(parent: animationController, curve: Curves.easeOut),
         child: Container(
-          child: uuid == '123' ? _myMessage() : _notMyMessage(),
+          child:
+              uuid == authService.usuario.uid ? _myMessage() : _notMyMessage(),
         ),
       ),
     );
@@ -30,11 +35,11 @@ class ChatMessage extends StatelessWidget {
     return Align(
       alignment: Alignment.centerRight,
       child: Container(
-        margin: EdgeInsets.only(bottom: 5, left: 50, right: 5),
-        padding: EdgeInsets.all(8.0),
+        margin: EdgeInsets.only(bottom: 5, left: 50, right: 20),
+        padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
         child: Text(
           texto,
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: Colors.white, fontSize: 16),
         ),
         decoration: BoxDecoration(
             color: Color(0xff4D9EF6), borderRadius: BorderRadius.circular(20)),
@@ -46,11 +51,11 @@ class ChatMessage extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
-        margin: EdgeInsets.only(bottom: 5, left: 5, right: 50),
+        margin: EdgeInsets.only(bottom: 5, left: 20, right: 50),
         padding: EdgeInsets.all(8.0),
         child: Text(
           texto,
-          style: TextStyle(color: Colors.black87),
+          style: TextStyle(color: Colors.black87, fontSize: 16),
         ),
         decoration: BoxDecoration(
             color: Color(0xffE4E5E8), borderRadius: BorderRadius.circular(20)),

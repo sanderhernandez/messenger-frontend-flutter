@@ -2,23 +2,25 @@ import 'dart:io';
 
 class Environment {
   final String path;
-  // Para android:
-  static String androidHost = '192.168.0.8';
+
+  Environment({required this.path});
+
+  // Datos estáticos:
+  static String scheme = 'http';
+  static String host = '192.168.1.250';
+  static int port = 3000;
 
   // Para IOS:
   static String _iosHost = 'localhost';
 
-  Environment({required this.path});
-
   static String get iosHost => _iosHost;
 
   Uri get apiUrl => Platform.isAndroid
-      ? Uri(scheme: 'http', port: 3000, host: androidHost, path: path)
-      : Uri(scheme: 'http', port: 3000, host: iosHost, path: path);
+      ? Uri(scheme: scheme, port: port, host: host, path: path)
+      : Uri(scheme: scheme, port: port, host: iosHost, path: path);
 
-  Uri socketUrl = Platform.isAndroid
-      ? Uri(scheme: 'http', port: 3000, host: androidHost, path: '')
-      : Uri(scheme: 'http', port: 3000, host: iosHost, path: '');
+  static String socketUrl =
+      Platform.isAndroid ? '$scheme://$host:$port' : '$scheme://$host:$port';
 }
 
 // import 'dart:io';

@@ -1,8 +1,10 @@
 import 'dart:io';
 
+import 'package:chat/services/services.dart';
 import 'package:chat/widgets/widgets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ChatScreen extends StatefulWidget {
   ChatScreen({Key? key}) : super(key: key);
@@ -28,8 +30,65 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     //         'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Amet dictum sit amet justo donec enim diam vulputate. Enim sed faucibus turpis in eu mi. Nibh cras pulvinar mattis nunc sed blandit libero. Cras tincidunt lobortis feugiat vivamus at augue eget arcu.'),
   ];
 
+  late ChatService chatService;
+  late SocketService socketService;
+  late AuthService authService;
+
+  @override
+  void initState() {
+    // TODO: implement initState
+
+    this.chatService = Provider.of<ChatService>(context, listen: false);
+    this.socketService = Provider.of<SocketService>(context, listen: false);
+    this.authService = Provider.of<AuthService>(context, listen: false);
+
+    socketService.socket
+        .on('mensaje-personal', (data) => _escucharMensaje(data));
+
+    _cargarHistorialChat(chatService.usuarioPara.uid);
+
+    super.initState();
+  }
+
+  Future<void> _cargarHistorialChat(String usuarioID) async {
+    List<Mensaje> chat = await chatService.getChat(usuarioID);
+    // print(chat);
+    final history = chat.map(
+      (m) => new ChatMessage(
+        texto: m.mensaje,
+        uuid: m.de,
+        animationController: AnimationController(
+          vsync: this,
+          duration: Duration(milliseconds: 0),
+        )..forward(),
+      ),
+    );
+
+    setState(() {
+      _messages.insertAll(0, history);
+    });
+  }
+
+  void _escucharMensaje(dynamic payload) {
+    ChatMessage message = ChatMessage(
+      texto: payload['mensaje'],
+      uuid: payload['de'],
+      animationController: AnimationController(
+          vsync: this, duration: Duration(milliseconds: 300)),
+    );
+
+    setState(() {
+      _messages.insert(0, message);
+    });
+
+    message.animationController.forward();
+  }
+
   @override
   Widget build(BuildContext context) {
+    // final chatService = Provider.of<ChatService>(context);
+    final usuarioPara = chatService.usuarioPara;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -39,12 +98,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               CircleAvatar(
-                child: Text('M'),
+                child: Text(usuarioPara.nombre.substring(0, 1).toUpperCase()),
                 backgroundColor: Colors.blue[100],
                 maxRadius: 14,
               ),
               Text(
-                'Melissa',
+                usuarioPara.nombre,
                 style: TextStyle(color: Colors.black87, fontSize: 12),
               ),
             ],
@@ -144,7 +203,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     _focusNode.requestFocus();
 
     final newMessage = new ChatMessage(
-      uuid: '123',
+      uuid: authService.usuario.uid,
       texto: texto,
       animationController: AnimationController(
         vsync: this,
@@ -158,15 +217,21 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     setState(() {
       estaEscribiendo = false;
     });
+    socketService.socket.emit('mensaje-personal', {
+      'de': this.authService.usuario.uid,
+      'para': chatService.usuarioPara.uid,
+      'mensaje': texto
+    });
   }
 
   @override
   void dispose() {
-    // TODO: Escuchar del socket = off
-
     for (ChatMessage message in _messages) {
       message.animationController.dispose();
     }
+
+    // Escucha del socket = off
+    socketService.socket.off('mensaje-personal');
 
     super.dispose();
   }
